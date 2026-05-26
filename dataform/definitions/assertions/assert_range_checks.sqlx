@@ -1,5 +1,5 @@
 config {
-  type: "assertions",
+  type: "assertion",
   tags: ["quality", "bronze"],
 }
 
