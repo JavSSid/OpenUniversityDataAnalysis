@@ -1,0 +1,1 @@
+For this project, I'm focusing on assessing Data Quality and generating a formal Data Quality report to monitor data. The other goal for this project is to test out the end-to-end flow using the GCP Tech Stack and compare it with MS Fabric.
