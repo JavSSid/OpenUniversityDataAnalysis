@@ -37,6 +37,7 @@ dbt/dbt_packages/
 terraform/.terraform/
 terraform/terraform.tfstate*
 terraform/terraform.tfvars
+terraform/terraform.exe
 
 # ── Logs ──
 *.log
