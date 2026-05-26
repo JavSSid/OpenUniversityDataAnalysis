@@ -1,0 +1,27 @@
+config {
+  type: "assertions",
+  tags: ["quality", "bronze"],
+}
+
+-- Valid final_result values
+SELECT 'invalid_final_result' AS check_name, id_student, final_result AS value
+FROM ${ref("bronze_student_info")}
+WHERE final_result NOT IN ('Pass', 'Fail', 'Withdrawn', 'Distinction')
+
+UNION ALL
+
+-- Valid assessment types
+SELECT 'invalid_assessment_type' AS check_name, id_assessment, assessment_type AS value
+FROM ${ref("bronze_assessments")}
+WHERE assessment_type NOT IN ('TMA', 'CMA', 'Exam')
+
+UNION ALL
+
+-- Valid activity types
+SELECT 'invalid_activity_type' AS check_name, id_site, activity_type AS value
+FROM ${ref("bronze_vle")}
+WHERE activity_type NOT IN (
+  'forumng','oucontent','homepage','resource','url','quiz','htmlactivity',
+  'glossary','dataplus','questionnaire','repeatactivity','externalquiz',
+  'dualpane','folder','sharedsubpage','page','subpage'
+)

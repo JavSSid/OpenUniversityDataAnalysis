@@ -1,0 +1,17 @@
+config {
+  type: "view",
+  schema: "bronze",
+  tags: ["bronze"],
+}
+
+SELECT
+  code_module,
+  code_presentation,
+  id_student,
+  date_registration,
+  date_unregistration,
+  CASE WHEN date_unregistration IS NOT NULL AND date_unregistration <> 0
+       THEN TRUE ELSE FALSE END AS has_unregistered,
+  _ingested_at,
+  _source_file
+FROM bronze.student_registration

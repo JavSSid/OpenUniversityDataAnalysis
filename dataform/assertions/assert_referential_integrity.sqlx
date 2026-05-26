@@ -1,0 +1,30 @@
+config {
+  type: "assertions",
+  tags: ["quality", "bronze"],
+}
+
+-- student_assessment.id_assessment -> assessments.id_assessment
+SELECT 'orphan_student_assessment_assessment' AS check_name,
+       CAST(sa.id_assessment AS STRING) AS value
+FROM ${ref("bronze_student_assessment")} sa
+LEFT JOIN ${ref("bronze_assessments")} a ON sa.id_assessment = a.id_assessment
+WHERE a.id_assessment IS NULL
+
+UNION ALL
+
+-- student_vle.id_site -> vle.id_site
+SELECT 'orphan_student_vle_site' AS check_name,
+       CAST(sv.id_site AS STRING) AS value
+FROM ${ref("bronze_student_vle")} sv
+LEFT JOIN ${ref("bronze_vle")} v ON sv.id_site = v.id_site
+WHERE v.id_site IS NULL
+
+UNION ALL
+
+-- student_registration.id_student -> student_info.id_student
+SELECT 'orphan_registration_student' AS check_name,
+       CAST(sr.id_student AS STRING) AS value
+FROM ${ref("bronze_student_registration")} sr
+LEFT JOIN ${ref("bronze_student_info")} si
+  ON sr.id_student = si.id_student
+WHERE si.id_student IS NULL

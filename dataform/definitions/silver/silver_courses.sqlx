@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  schema: "silver",
+  tags: ["silver"],
+  columns: {
+    code_module: "Module identifier",
+    code_presentation: "Presentation identifier (e.g. 2013B, 2014J)",
+    length: "Course length in days",
+    presentation_start: "Derived: February or October based on code_presentation suffix",
+    _ingested_at: "Ingestion timestamp",
+  },
+}
+
+SELECT
+  code_module,
+  code_presentation,
+  length,
+  CASE
+    WHEN SUBSTR(code_presentation, -1) = 'B' THEN 'February'
+    WHEN SUBSTR(code_presentation, -1) = 'J' THEN 'October'
+    ELSE 'Unknown'
+  END AS presentation_start,
+  _ingested_at
+FROM ${ref("bronze_courses")}

@@ -1,0 +1,156 @@
+# ──────────────────────────────────────────────────────────────
+# OULAD Data Quality Rules — Great Expectations
+# ──────────────────────────────────────────────────────────────
+
+rules:
+  # ── Schema & Completeness ─────────────────────────────────
+  not_null_checks:
+    - table: student_info
+      columns: [id_student, code_module, code_presentation, gender, final_result]
+    - table: student_assessment
+      columns: [id_assessment, id_student, score]
+    - table: student_vle
+      columns: [id_student, id_site, date, sum_click]
+    - table: student_registration
+      columns: [id_student, date_registration]
+    - table: assessments
+      columns: [id_assessment, assessment_type, weight]
+    - table: courses
+      columns: [code_module, code_presentation]
+    - table: vle
+      columns: [id_site, activity_type]
+
+  unique_checks:
+    - table: courses
+      columns: [code_module, code_presentation]
+    - table: assessments
+      columns: [id_assessment]
+    - table: vle
+      columns: [id_site]
+
+  # ── Referential Integrity ────────────────────────────────
+  referential_integrity:
+    - child_table: student_assessment
+      child_column: id_assessment
+      parent_table: assessments
+      parent_column: id_assessment
+    - child_table: student_assessment
+      child_column: id_student
+      parent_table: student_info
+      parent_column: id_student
+    - child_table: student_registration
+      child_column: id_student
+      parent_table: student_info
+      parent_column: id_student
+    - child_table: student_vle
+      child_column: id_site
+      parent_table: vle
+      parent_column: id_site
+    - child_table: student_vle
+      child_column: id_student
+      parent_table: student_info
+      parent_column: id_student
+    - child_table: student_vle
+      child_column: [code_module, code_presentation]
+      parent_table: courses
+      parent_column: [code_module, code_presentation]
+
+  # ── Range & Boundary Checks ──────────────────────────────
+  range_checks:
+    - table: student_assessment
+      column: score
+      min: 0
+      max: 100
+    - table: assessments
+      column: weight
+      min: 0
+      max: 100
+    - table: student_vle
+      column: sum_click
+      min: 0
+    - table: student_registration
+      column: date_registration
+      min: -365
+      max: 0
+    - table: assessments
+      column: date
+      min: -365
+      max: 365
+
+  # ── Business Logic ───────────────────────────────────────
+  business_rules:
+    # Weight sum per assessment group should be 100 (except Exam at 100)
+    - name: assessment_weight_sum
+      table: assessments
+      rule: "GROUP BY code_module, code_presentation HAVING ABS(SUM(weight) - 100) > 1 OR SUM(CASE WHEN assessment_type = 'Exam' THEN 1 ELSE 0 END) = 0"
+      severity: warning
+      action: log
+
+    # Final result values must be in allowed set
+    - name: valid_final_results
+      table: student_info
+      column: final_result
+      allowed_values: [Pass, Fail, Withdrawn, Distinction]
+      severity: critical
+
+    # Valid activity types
+    - name: valid_activity_types
+      table: vle
+      column: activity_type
+      allowed_values:
+        - forumng
+        - oucontent
+        - homepage
+        - resource
+        - url
+        - quiz
+        - htmlactivity
+        - glossary
+        - dataplus
+        - questionnaire
+        - repeatactivity
+        - externalquiz
+        - dualpane
+        - folder
+        - sharedsubpage
+        - page
+        - subpage
+      severity: warning
+
+    # Assessment types must be in allowed set
+    - name: valid_assessment_types
+      table: assessments
+      column: assessment_type
+      allowed_values: [TMA, CMA, Exam]
+      severity: critical
+
+  # ── Distribution & Drift ─────────────────────────────────
+  distribution_checks:
+    - table: student_info
+      column: gender
+      profile_type: categorical
+      max_drift_percent: 5.0
+    - table: student_info
+      column: final_result
+      profile_type: categorical
+      max_drift_percent: 5.0
+    - table: student_vle
+      column: sum_click
+      profile_type: numeric
+      max_drift_zscore: 3.0
+
+  # ── Custom ───────────────────────────────────────────────
+  custom_checks:
+    # No future dates in the dataset
+    - name: no_future_dates
+      table: assessments
+      column: date
+      rule: "max(date) <= (SELECT max(date) FROM courses WHERE courses.length IS NOT NULL)"
+      severity: critical
+
+    # is_banked should be boolean
+    - name: is_banked_boolean
+      table: student_assessment
+      column: is_banked
+      allowed_values: [0, 1]
+      severity: warning

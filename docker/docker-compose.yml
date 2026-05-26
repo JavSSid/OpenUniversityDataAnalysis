@@ -1,0 +1,31 @@
+# ──────────────────────────────────────────────────────────────
+# OULAD Data Platform — GCP Architecture
+# ──────────────────────────────────────────────────────────────
+# This project runs entirely on GCP serverless services:
+#   BigQuery   → Data warehouse (bronze/silver/gold)
+#   Dataform   → SQL transforms + assertions (replaces dbt)
+#   Cloud Run  → Python ingestion, quality, anomaly jobs
+#   Cloud Scheduler → Daily trigger
+#
+# No local Docker infrastructure needed. To deploy:
+#
+#   1. Terraform (infrastructure):
+#      cd terraform && terraform apply
+#
+#   2. Dataform (SQL transforms):
+#      - Open GCP Console → BigQuery → Dataform
+#      - Create repository linked to your GitHub
+#      - Push dataform/ directory to main branch
+#      - Set schedules in Dataform UI
+#
+#   3. Cloud Run Jobs (Python steps):
+#      cd cloudrun/ingestion
+#      gcloud builds submit --tag europe-west1-docker.pkg.dev/.../ingestion
+#      gcloud run jobs create oulad-ingestion --image ...
+#
+#   4. Connect Power BI to BigQuery:
+#      - Dataset: gold
+#      - Auth: Service Principal (oulad-pipeline-sa)
+#
+# See PLAN.md §10 for full setup guide.
+# -------------------------------------------------------------------

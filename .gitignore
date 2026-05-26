@@ -1,0 +1,41 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.egg
+
+# ── Environment ──
+.env
+
+# ── Data (source CSVs + reports) ──
+data/raw/
+data/audit/
+data/reports/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── dbt ──
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# ── Jupyter ──
+.ipynb_checkpoints/
+
+# ── Terraform ──
+terraform/.terraform/
+terraform/terraform.tfstate*
+terraform/terraform.tfvars
+
+# ── Logs ──
+*.log

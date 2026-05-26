@@ -1,0 +1,1 @@
+"""OULAD quality module."""

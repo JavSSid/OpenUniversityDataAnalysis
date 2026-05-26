@@ -1,0 +1,23 @@
+config {
+  type: "assertions",
+  tags: ["quality", "bronze"],
+}
+
+-- Score 0-100
+SELECT 'score_out_of_range' AS check_name, id_assessment, CAST(score AS STRING) AS value
+FROM ${ref("bronze_student_assessment")}
+WHERE score IS NOT NULL AND (score < 0 OR score > 100)
+
+UNION ALL
+
+-- Weight 0-100
+SELECT 'weight_out_of_range' AS check_name, id_assessment, CAST(weight AS STRING) AS value
+FROM ${ref("bronze_assessments")}
+WHERE weight < 0 OR weight > 100
+
+UNION ALL
+
+-- sum_click >= 0
+SELECT 'negative_sum_click' AS check_name, id_student, CAST(sum_click AS STRING) AS value
+FROM ${ref("bronze_student_vle")}
+WHERE sum_click < 0

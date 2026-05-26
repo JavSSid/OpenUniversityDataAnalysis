@@ -1,0 +1,65 @@
+config {
+  type: "table",
+  schema: "gold",
+  tags: ["gold"],
+  assertions: {
+    nonNull: ["id_student"],
+  },
+}
+
+WITH engagement AS (
+  SELECT
+    id_student,
+    code_module,
+    code_presentation,
+    SUM(total_clicks) AS lifetime_clicks,
+    SUM(active_days) AS total_active_days,
+    AVG(avg_daily_clicks) AS avg_daily_clicks,
+    COUNT(DISTINCT week_number) AS active_weeks
+  FROM ${ref("fact_engagement_summary")}
+  GROUP BY 1, 2, 3
+),
+assessment AS (
+  SELECT
+    id_student,
+    AVG(score) AS avg_score,
+    COUNT(id_assessment) AS assessments_taken,
+    SUM(CASE WHEN assessment_result = 'passed' THEN 1 ELSE 0 END) AS assessments_passed
+  FROM ${ref("fact_student_assessment")}
+  GROUP BY id_student
+),
+combined AS (
+  SELECT
+    s.id_student,
+    s.code_module,
+    s.code_presentation,
+    s.final_result,
+    s.gender,
+    s.age_band,
+    s.disability,
+    s.num_of_prev_attempts,
+    s.registration_timing,
+    s.has_unregistered,
+    COALESCE(e.lifetime_clicks, 0) AS lifetime_clicks,
+    COALESCE(e.total_active_days, 0) AS total_active_days,
+    COALESCE(e.active_weeks, 0) AS active_weeks,
+    COALESCE(a.avg_score, 0) AS avg_score,
+    COALESCE(a.assessments_taken, 0) AS assessments_taken,
+    COALESCE(a.assessments_passed, 0) AS assessments_passed,
+    CASE
+      WHEN e.total_active_days = 0 THEN 0
+      ELSE ROUND(CAST(a.assessments_passed AS FLOAT64) / NULLIF(a.assessments_taken, 0), 2)
+    END AS assessment_completion_rate,
+    CASE
+      WHEN s.final_result = 'Withdrawn' AND e.lifetime_clicks < 100 THEN TRUE
+      ELSE FALSE
+    END AS early_dropout_flag
+  FROM ${ref("dim_student")} s
+  LEFT JOIN engagement e
+    ON s.id_student = e.id_student
+    AND s.code_module = e.code_module
+    AND s.code_presentation = e.code_presentation
+  LEFT JOIN assessment a
+    ON s.id_student = a.id_student
+)
+SELECT * FROM combined

@@ -1,0 +1,35 @@
+config {
+  type: "table",
+  schema: "silver",
+  tags: ["silver"],
+  columns: {
+    id_site: "VLE site identifier",
+    code_module: "Module identifier",
+    code_presentation: "Presentation identifier",
+    activity_type: "Raw activity type from source",
+    week_from: "Week range start",
+    week_to: "Week range end",
+    activity_category: "Mapped activity category (communication, content, assessment, reference, tool, other)",
+  },
+  assertions: {
+    uniqueKey: ["id_site"],
+    nonNull: ["id_site", "activity_type"],
+  },
+}
+
+SELECT
+  id_site,
+  code_module,
+  code_presentation,
+  activity_type,
+  week_from,
+  week_to,
+  CASE
+    WHEN activity_type IN ('forumng', 'glossary') THEN 'communication'
+    WHEN activity_type IN ('oucontent', 'htmlactivity', 'page', 'subpage') THEN 'content'
+    WHEN activity_type IN ('quiz', 'externalquiz', 'questionnaire') THEN 'assessment'
+    WHEN activity_type IN ('resource', 'url', 'folder', 'sharedsubpage') THEN 'reference'
+    WHEN activity_type IN ('homepage', 'dataplus', 'dualpane', 'repeatactivity') THEN 'tool'
+    ELSE 'other'
+  END AS activity_category
+FROM ${ref("bronze_vle")}

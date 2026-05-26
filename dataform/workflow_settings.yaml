@@ -1,0 +1,28 @@
+# Dataform workflow settings — deployed via GCP Console or gcloud
+# These are set per-environment in the Dataform UI under "Workflow settings".
+# For local dev, dataform.json vars are used instead.
+
+defaultBranch: main
+releaseHistory:
+  limit: 10
+schedule:
+  # Bronze → Silver → Gold daily at 06:00 UTC
+  - name: daily_full_pipeline
+    cron: "0 6 * * *"
+    tags:
+      - bronze
+      - silver
+      - gold
+      - assertions
+
+  # Quality & anomaly checks after gold builds (weekdays only)
+  - name: quality_checks
+    cron: "0 8 * * 1-5"
+    tags:
+      - quality
+
+notifications:
+  - channel: slack
+    onFailure:
+      - daily_full_pipeline
+      - quality_checks

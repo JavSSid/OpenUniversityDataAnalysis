@@ -1,0 +1,3 @@
+Stage 1: Data Quality Reporting
+Stage 2: Migrate to GCP
+Stage 2: Add a condition to satisfy changing schemas and switch to data vaults

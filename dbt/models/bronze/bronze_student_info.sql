@@ -1,0 +1,17 @@
+SELECT
+    code_module,
+    code_presentation,
+    id_student,
+    gender,
+    region,
+    highest_education,
+    imd_band,
+    age_band,
+    num_of_prev_attempts,
+    studied_credits,
+    disability,
+    final_result,
+    _ingested_at,
+    _source_file
+FROM bronze.student_info
+WHERE final_result IN ('Pass', 'Fail', 'Withdrawn', 'Distinction')

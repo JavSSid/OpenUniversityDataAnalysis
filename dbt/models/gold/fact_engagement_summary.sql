@@ -1,0 +1,15 @@
+{% set week_duration = 7 %}
+
+SELECT
+    sv.id_student,
+    sv.code_module,
+    sv.code_presentation,
+    FLOOR(sv.date / {{ week_duration }}) AS week_number,
+    COUNT(DISTINCT sv.date) AS active_days,
+    SUM(sv.sum_click) AS total_clicks,
+    AVG(sv.sum_click) AS avg_daily_clicks,
+    COUNT(DISTINCT sv.id_site) AS unique_resources,
+    COUNT(DISTINCT sv.activity_type) AS unique_activity_types,
+    MAX(sv.sum_click) AS max_daily_clicks
+FROM {{ ref('silver_student_vle') }} sv
+GROUP BY 1, 2, 3, 4

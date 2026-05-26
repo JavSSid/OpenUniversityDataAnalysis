@@ -1,0 +1,50 @@
+# ──────────────────────────────────────────────────────────────
+# OULAD Data Platform — Cloud Build CI/CD
+# Triggers: push to main → build container → deploy Cloud Run job
+# ──────────────────────────────────────────────────────────────
+
+steps:
+  # ── Build container image ─────────────────────────────────
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - -t
+      - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/ingestion:${_TAG}"
+      - -f
+      - cloudrun/ingestion/Dockerfile
+      - .
+
+  # ── Push to Artifact Registry ─────────────────────────────
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - push
+      - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/ingestion:${_TAG}"
+
+  # ── Deploy Cloud Run job ──────────────────────────────────
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - oulad-ingestion
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/ingestion:${_TAG}
+      - --region=${_REGION}
+      - --project=${PROJECT_ID}
+      - --service-account=oulad-pipeline-sa@${PROJECT_ID}.iam.gserviceaccount.com
+      - --max-retries=2
+      - --task-timeout=10m
+      - --memory=1Gi
+      - --cpu=1
+      - --set-env-vars=ENVIRONMENT=prod
+
+substitutions:
+  _REGION: europe-west1
+  _ARTIFACT_REPO: oulad
+  _TAG: latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 1200s

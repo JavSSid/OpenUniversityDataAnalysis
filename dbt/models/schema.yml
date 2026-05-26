@@ -1,0 +1,125 @@
+version: 2
+
+models:
+  - name: bronze_courses
+    description: Raw courses data from OULAD CSVs
+
+  - name: bronze_assessments
+    description: Raw assessments data
+
+  - name: bronze_vle
+    description: Raw VLE materials data
+
+  - name: bronze_student_info
+    description: Raw student demographic information
+
+  - name: bronze_student_registration
+    description: Raw student registration data
+
+  - name: bronze_student_assessment
+    description: Raw student assessment scores
+
+  - name: bronze_student_vle
+    description: Raw student VLE interaction clicks
+
+  - name: silver_courses
+    description: Cleaned courses with presentation start derived
+    tests:
+      - unique:
+          columns: [code_module, code_presentation]
+      - not_null:
+          columns: [code_module, code_presentation, length]
+
+  - name: silver_assessments
+    description: Cleaned assessments with module context
+    tests:
+      - not_null:
+          columns: [id_assessment, assessment_type, weight]
+      - accepted_values:
+          column: assessment_type
+          values: [TMA, CMA, Exam]
+
+  - name: silver_vle
+    description: Cleaned VLE materials with activity category
+    tests:
+      - not_null:
+          columns: [id_site, activity_type]
+      - accepted_values:
+          column: activity_category
+          values: [communication, content, assessment, reference, tool, other]
+
+  - name: silver_student_info
+    description: Cleaned student demographics with PII hashed
+    tests:
+      - not_null:
+          columns: [id_student, final_result]
+      - accepted_values:
+          column: final_result
+          values: [Pass, Fail, Withdrawn, Distinction]
+
+  - name: silver_student_registration
+    description: Cleaned student registration with null handling
+    tests:
+      - not_null:
+          columns: [id_student, date_registration]
+
+  - name: silver_student_assessment
+    description: Cleaned student assessments with delay calculation
+    tests:
+      - not_null:
+          columns: [id_assessment, id_student]
+      - accepted_values:
+          column: assessment_result
+          values: [passed, failed, not_submitted]
+
+  - name: silver_student_vle
+    description: Cleaned student VLE clicks with activity metadata
+    tests:
+      - not_null:
+          columns: [id_student, id_site, date]
+
+  # ── Gold Models ──────────────────────────────────────────
+
+  - name: dim_student
+    description: Student dimension with demographics and registration details
+    tests:
+      - unique:
+          columns: [id_student, code_module, code_presentation]
+      - not_null:
+          columns: [id_student]
+
+  - name: dim_course
+    description: Course dimension with assessment summary
+    tests:
+      - unique:
+          columns: [code_module, code_presentation]
+
+  - name: fact_student_interaction
+    description: Daily student VLE interaction facts
+    tests:
+      - not_null:
+          columns: [id_student, date]
+
+  - name: fact_student_assessment
+    description: Per-assessment student score facts
+    tests:
+      - not_null:
+          columns: [id_student, id_assessment, score]
+
+  - name: fact_engagement_summary
+    description: Weekly aggregated student engagement metrics
+    tests:
+      - not_null:
+          columns: [id_student, week_number]
+
+  - name: rpt_student_performance
+    description: Feature-engineered view for student performance analysis
+    tests:
+      - not_null:
+          columns: [id_student]
+
+  - name: rpt_quality_metrics
+    description: Pipeline quality metrics for Power BI consumption
+    tests:
+      - not_null:
+          columns: [run_date, table_name, pass_rate]

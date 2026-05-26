@@ -1,0 +1,89 @@
+# ──────────────────────────────────────────────────────────────
+# OULAD Pipeline Configuration — GCP BigQuery
+# ──────────────────────────────────────────────────────────────
+
+pipeline:
+  name: oulad_data_pipeline
+  version: 1.0.0
+  environment: ${ENVIRONMENT:dev}
+
+storage:
+  bronze:
+    type: bigquery
+    project: ${GCP_PROJECT_ID}
+    dataset: bronze
+    location: EU
+  silver:
+    type: bigquery
+    project: ${GCP_PROJECT_ID}
+    dataset: silver
+    location: EU
+  gold:
+    type: bigquery
+    project: ${GCP_PROJECT_ID}
+    dataset: gold
+    location: EU
+
+gcs:
+  raw_bucket: oulad-raw-data
+  dbt_artifacts_bucket: oulad-dbt-artifacts
+  gx_docs_bucket: oulad-gx-docs
+  dags_bucket: oulad-airflow-dags
+
+datasets:
+  courses:
+    source: gs://oulad-raw-data/courses.csv
+    primary_key: [code_module, code_presentation]
+  assessments:
+    source: gs://oulad-raw-data/assessments.csv
+    primary_key: [id_assessment]
+  vle:
+    source: gs://oulad-raw-data/vle.csv
+    primary_key: [id_site]
+  student_info:
+    source: gs://oulad-raw-data/studentInfo.csv
+    primary_key: [id_student, code_module, code_presentation]
+    pii_fields: [region, imd_band]
+  student_registration:
+    source: gs://oulad-raw-data/studentRegistration.csv
+    primary_key: [id_student, code_module, code_presentation]
+  student_assessment:
+    source: gs://oulad-raw-data/studentAssessment.csv
+    primary_key: [id_assessment, id_student]
+  student_vle:
+    source: gs://oulad-raw-data/studentVle.csv
+    primary_key: [id_student, id_site, date]
+
+quality:
+  run_validation_on: [bronze, silver]
+  fail_on_critical: true
+
+anomaly:
+  enabled: true
+  click_threshold:
+    daily_max: 5000
+    z_score: 3.0
+  assessment_score:
+    z_score: 3.0
+    iqr_multiplier: 1.5
+  registration:
+    date_range_days: [-365, 0]
+
+reporting:
+  html:
+    enabled: true
+    output_path: data/reports/
+  slack:
+    enabled: true
+    channel: ${SLACK_CHANNEL}
+    webhook_url: ${SLACK_WEBHOOK_URL}
+
+security:
+  encrypt_pii: true
+  audit_log: true
+  pii_fields:
+    - region
+    - imd_band
+  gcp:
+    secret_project: ${GCP_PROJECT_ID}
+    secret_prefix: oulad-

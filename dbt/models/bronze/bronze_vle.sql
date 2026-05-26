@@ -1,0 +1,10 @@
+SELECT
+    id_site,
+    code_module,
+    code_presentation,
+    activity_type,
+    week_from,
+    week_to,
+    _ingested_at,
+    _source_file
+FROM bronze.vle

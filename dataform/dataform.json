@@ -1,0 +1,10 @@
+{
+  "warehouse": "bigquery",
+  "defaultSchema": "bronze",
+  "assertionSchema": "dataform_assertions",
+  "defaultDatabase": "oulad-platform",
+  "defaultLocation": "EU",
+  "vars": {
+    "environment": "dev"
+  }
+}

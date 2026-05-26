@@ -1,0 +1,10 @@
+SELECT
+    id_assessment,
+    id_student,
+    date_submitted,
+    is_banked,
+    score,
+    _ingested_at,
+    _source_file
+FROM bronze.student_assessment
+WHERE score IS NULL OR (score >= 0 AND score <= 100)

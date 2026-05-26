@@ -1,0 +1,36 @@
+config {
+  type: "table",
+  schema: "silver",
+  tags: ["silver"],
+  columns: {
+    id_student: "Student identifier (anonymized by source)",
+    code_module: "Module identifier",
+    code_presentation: "Presentation identifier",
+    gender: "Student gender",
+    region: "Geographic region (SHA-256 hashed at ingestion)",
+    highest_education: "Highest education level",
+    imd_band: "Index of Multiple Deprivation band (SHA-256 hashed at ingestion)",
+    age_band: "Student age band",
+    num_of_prev_attempts: "Number of previous attempts",
+    studied_credits: "Total credits studied",
+    disability: "Disability status",
+    final_result: "Final result (Pass, Fail, Withdrawn, Distinction)",
+    _ingested_at: "Ingestion timestamp",
+  },
+}
+
+SELECT
+  id_student,
+  code_module,
+  code_presentation,
+  gender,
+  TO_HEX(SHA256(CAST(region AS STRING))) AS region,
+  TO_HEX(SHA256(CAST(imd_band AS STRING))) AS imd_band,
+  highest_education,
+  age_band,
+  num_of_prev_attempts,
+  studied_credits,
+  disability,
+  final_result,
+  _ingested_at
+FROM ${ref("bronze_student_info")}
