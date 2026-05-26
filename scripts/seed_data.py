@@ -49,7 +49,7 @@ def extract_zip(zip_path: str) -> None:
     logger.info(f"Extracted {len(csv_files)} CSV files to {RAW_DIR}")
 
 
-def upload_to_gcs(bucket_name: str = "oulad-raw-data") -> None:
+def upload_to_gcs(bucket_name: str = "openuniversitydataanalysis-raw-data") -> None:
     """Upload CSV files from data/raw/ to GCS bucket."""
     try:
         from google.cloud import storage

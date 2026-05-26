@@ -127,7 +127,19 @@ class BronzeLoader:
     def _load_config(self) -> dict:
         config_path = Path(__file__).parents[2] / "config" / "pipeline_config.yaml"
         with open(config_path) as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+        return self._resolve_env_placeholders(config)
+
+    def _resolve_env_placeholders(self, value):
+        if isinstance(value, dict):
+            return {k: self._resolve_env_placeholders(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self._resolve_env_placeholders(v) for v in value]
+        if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+            expression = value[2:-1]
+            key, _, default = expression.partition(":")
+            return os.environ.get(key, default or value)
+        return value
 
     def _create_bq_client(self):
         project = self.config["storage"]["bronze"]["project"]

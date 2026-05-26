@@ -25,33 +25,31 @@ storage:
     location: EU
 
 gcs:
-  raw_bucket: oulad-raw-data
-  dbt_artifacts_bucket: oulad-dbt-artifacts
-  gx_docs_bucket: oulad-gx-docs
-  dags_bucket: oulad-airflow-dags
+  raw_bucket: openuniversitydataanalysis-raw-data
+  dataform_artifacts_bucket: openuniversitydataanalysis-dataform-artifacts
 
 datasets:
   courses:
-    source: gs://oulad-raw-data/courses.csv
+    source: gs://openuniversitydataanalysis-raw-data/courses.csv
     primary_key: [code_module, code_presentation]
   assessments:
-    source: gs://oulad-raw-data/assessments.csv
+    source: gs://openuniversitydataanalysis-raw-data/assessments.csv
     primary_key: [id_assessment]
   vle:
-    source: gs://oulad-raw-data/vle.csv
+    source: gs://openuniversitydataanalysis-raw-data/vle.csv
     primary_key: [id_site]
   student_info:
-    source: gs://oulad-raw-data/studentInfo.csv
+    source: gs://openuniversitydataanalysis-raw-data/studentInfo.csv
     primary_key: [id_student, code_module, code_presentation]
     pii_fields: [region, imd_band]
   student_registration:
-    source: gs://oulad-raw-data/studentRegistration.csv
+    source: gs://openuniversitydataanalysis-raw-data/studentRegistration.csv
     primary_key: [id_student, code_module, code_presentation]
   student_assessment:
-    source: gs://oulad-raw-data/studentAssessment.csv
+    source: gs://openuniversitydataanalysis-raw-data/studentAssessment.csv
     primary_key: [id_assessment, id_student]
   student_vle:
-    source: gs://oulad-raw-data/studentVle.csv
+    source: gs://openuniversitydataanalysis-raw-data/studentVle.csv
     primary_key: [id_student, id_site, date]
 
 quality:
