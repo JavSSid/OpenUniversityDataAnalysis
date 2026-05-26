@@ -27,12 +27,12 @@ output "raw_data_bucket" {
   value       = google_storage_bucket.raw_data.name
 }
 
-output "composer_environment" {
-  description = "Cloud Composer 2 environment name"
-  value       = google_composer_environment.composer.name
+output "ingestion_job_name" {
+  description = "Cloud Run ingestion job name"
+  value       = google_cloud_run_v2_job.ingestion.name
 }
 
-output "airflow_dags_bucket" {
-  description = "GCS bucket for Airflow DAGs"
-  value       = google_storage_bucket.airflow_dags.name
+output "scheduler_job_name" {
+  description = "Cloud Scheduler job name"
+  value       = google_cloud_scheduler_job.daily_ingestion.name
 }
