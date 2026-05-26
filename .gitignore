@@ -8,6 +8,7 @@ venv/
 
 # ── Environment ──
 .env
+gcp-sa.json
 
 # ── Data (source CSVs + reports) ──
 data/raw/
