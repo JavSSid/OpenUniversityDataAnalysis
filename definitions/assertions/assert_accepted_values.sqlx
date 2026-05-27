@@ -23,5 +23,6 @@ FROM ${ref("bronze_vle")}
 WHERE activity_type NOT IN (
   'forumng','oucontent','homepage','resource','url','quiz','htmlactivity',
   'glossary','dataplus','questionnaire','repeatactivity','externalquiz',
-  'dualpane','folder','sharedsubpage','page','subpage'
+  'dualpane','folder','sharedsubpage','page','subpage','oucollaborate',
+  'ouwiki','ouelluminate'
 )

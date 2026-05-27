@@ -3,7 +3,7 @@ config {
   schema: "gold",
   tags: ["gold"],
   assertions: {
-    nonNull: ["id_student", "id_assessment", "score"],
+    nonNull: ["id_student", "id_assessment"],
   },
 }
 

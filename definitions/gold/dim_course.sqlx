@@ -12,7 +12,7 @@ SELECT DISTINCT
   c.code_presentation,
   c.length,
   c.presentation_start,
-  a.assessment_type,
+  a.assessment_types,
   a.count AS assessment_count,
   a.total_weight
 FROM ${ref("silver_courses")} c
@@ -20,6 +20,7 @@ LEFT JOIN (
   SELECT
     code_module,
     code_presentation,
+    STRING_AGG(DISTINCT assessment_type, ', ' ORDER BY assessment_type) AS assessment_types,
     COUNT(DISTINCT id_assessment) AS count,
     SUM(weight) AS total_weight
   FROM ${ref("silver_assessments")}
