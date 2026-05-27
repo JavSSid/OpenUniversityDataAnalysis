@@ -21,5 +21,6 @@ SELECT
   0 AS pipeline_duration_sec,
   0 AS dbt_tests_passed,
   0 AS dbt_tests_failed
+FROM (SELECT 1)
 
-${ when(incremental(), `WHERE run_date > (SELECT MAX(run_date) FROM ${self()})`) }
+${ when(incremental(), `WHERE CURRENT_DATE() > COALESCE((SELECT MAX(run_date) FROM ${self()}), DATE '1900-01-01')`) }
