@@ -9,9 +9,9 @@ config {
 
 SELECT DISTINCT
   TO_HEX(SHA256(CONCAT(
-    CAST(id_student AS STRING), '|',
-    code_module, '|',
-    code_presentation
+    CAST(sr.id_student AS STRING), '|',
+    sr.code_module, '|',
+    sr.code_presentation
   ))) AS hk_student_enrollment,
   date_registration,
   NULLIF(date_unregistration, 0) AS date_unregistration,
