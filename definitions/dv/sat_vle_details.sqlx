@@ -7,19 +7,28 @@ config {
   },
 }
 
-SELECT DISTINCT
-  TO_HEX(SHA256(CAST(id_site AS STRING))) AS hk_vle,
-  activity_type,
-  CASE
-    WHEN activity_type IN ('forumng', 'glossary') THEN 'communication'
-    WHEN activity_type IN ('oucontent', 'htmlactivity', 'page', 'subpage') THEN 'content'
-    WHEN activity_type IN ('quiz', 'externalquiz', 'questionnaire') THEN 'assessment'
-    WHEN activity_type IN ('resource', 'url', 'folder', 'sharedsubpage') THEN 'reference'
-    WHEN activity_type IN ('homepage', 'dataplus', 'dualpane', 'repeatactivity') THEN 'tool'
-    ELSE 'other'
-  END AS activity_category,
-  week_from,
-  week_to,
+SELECT
+  hk_vle,
+  ANY_VALUE(activity_type) AS activity_type,
+  ANY_VALUE(activity_category) AS activity_category,
+  ANY_VALUE(week_from) AS week_from,
+  ANY_VALUE(week_to) AS week_to,
   CURRENT_TIMESTAMP() AS dv_load_date,
   'OULAD' AS dv_source
-FROM ${ref("bronze_vle")}
+FROM (
+  SELECT DISTINCT
+    TO_HEX(SHA256(CAST(id_site AS STRING))) AS hk_vle,
+    activity_type,
+    CASE
+      WHEN activity_type IN ('forumng', 'glossary') THEN 'communication'
+      WHEN activity_type IN ('oucontent', 'htmlactivity', 'page', 'subpage') THEN 'content'
+      WHEN activity_type IN ('quiz', 'externalquiz', 'questionnaire') THEN 'assessment'
+      WHEN activity_type IN ('resource', 'url', 'folder', 'sharedsubpage') THEN 'reference'
+      WHEN activity_type IN ('homepage', 'dataplus', 'dualpane', 'repeatactivity') THEN 'tool'
+      ELSE 'other'
+    END AS activity_category,
+    week_from,
+    week_to
+  FROM ${ref("bronze_vle")}
+)
+GROUP BY hk_vle

@@ -7,16 +7,17 @@ config {
   },
 }
 
-SELECT DISTINCT
+SELECT
   TO_HEX(SHA256(CAST(id_student AS STRING))) AS hk_student,
-  gender,
-  age_band,
-  highest_education,
-  disability,
-  TO_HEX(SHA256(CAST(region AS STRING))) AS region_hashed,
-  TO_HEX(SHA256(CAST(imd_band AS STRING))) AS imd_band_hashed,
-  studied_credits,
-  num_of_prev_attempts,
+  ANY_VALUE(gender) AS gender,
+  ANY_VALUE(age_band) AS age_band,
+  ANY_VALUE(highest_education) AS highest_education,
+  ANY_VALUE(disability) AS disability,
+  ANY_VALUE(TO_HEX(SHA256(CAST(region AS STRING)))) AS region_hashed,
+  ANY_VALUE(TO_HEX(SHA256(CAST(imd_band AS STRING)))) AS imd_band_hashed,
+  ANY_VALUE(studied_credits) AS studied_credits,
+  ANY_VALUE(num_of_prev_attempts) AS num_of_prev_attempts,
   CURRENT_TIMESTAMP() AS dv_load_date,
   'OULAD' AS dv_source
 FROM ${ref("bronze_student_info")}
+GROUP BY hk_student
