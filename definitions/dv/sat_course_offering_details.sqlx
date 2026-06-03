@@ -1,0 +1,20 @@
+config {
+  type: "table",
+  schema: "dv",
+  tags: ["dv", "satellite"],
+  assertions: {
+    nonNull: ["hk_course_offering"],
+  },
+}
+
+SELECT DISTINCT
+  TO_HEX(SHA256(CONCAT(code_module, '|', code_presentation))) AS hk_course_offering,
+  length,
+  CASE
+    WHEN SUBSTR(code_presentation, -1) = 'B' THEN 'February'
+    WHEN SUBSTR(code_presentation, -1) = 'J' THEN 'October'
+    ELSE 'Unknown'
+  END AS presentation_start,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM ${ref("bronze_courses")}

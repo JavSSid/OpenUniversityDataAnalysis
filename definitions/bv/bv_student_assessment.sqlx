@@ -1,0 +1,36 @@
+config {
+  type: "table",
+  schema: "bv",
+  tags: ["bv"],
+  assertions: {
+    nonNull: ["hk_student_assessment", "id_student", "id_assessment"],
+  },
+}
+
+SELECT
+  lsa.hk_student_assessment,
+  lsa.hk_student,
+  lsa.hk_assessment,
+  hub_s.id_student,
+  hub_a.id_assessment,
+  sar.date_submitted,
+  sar.is_banked,
+  sar.score,
+  sad.assessment_type,
+  sad.deadline_day,
+  sad.weight,
+  CASE
+    WHEN sar.score IS NULL THEN 'not_submitted'
+    WHEN sar.score >= 40 THEN 'passed'
+    ELSE 'failed'
+  END AS assessment_result,
+  sar.date_submitted - sad.deadline_day AS submission_delay_days
+FROM ${ref("link_student_assessment")} lsa
+LEFT JOIN ${ref("sat_student_assessment_result")} sar
+  ON lsa.hk_student_assessment = sar.hk_student_assessment
+LEFT JOIN ${ref("hub_student")} hub_s
+  ON lsa.hk_student = hub_s.hk_student
+LEFT JOIN ${ref("hub_assessment")} hub_a
+  ON lsa.hk_assessment = hub_a.hk_assessment
+LEFT JOIN ${ref("sat_assessment_details")} sad
+  ON lsa.hk_assessment = sad.hk_assessment

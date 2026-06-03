@@ -1,0 +1,17 @@
+config {
+  type: "table",
+  schema: "dv",
+  tags: ["dv", "hub"],
+  assertions: {
+    uniqueKey: ["hk_course_offering"],
+    nonNull: ["hk_course_offering", "code_module", "code_presentation"],
+  },
+}
+
+SELECT DISTINCT
+  TO_HEX(SHA256(CONCAT(code_module, '|', code_presentation))) AS hk_course_offering,
+  code_module,
+  code_presentation,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM ${ref("bronze_courses")}

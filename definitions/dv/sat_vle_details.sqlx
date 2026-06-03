@@ -1,0 +1,25 @@
+config {
+  type: "table",
+  schema: "dv",
+  tags: ["dv", "satellite"],
+  assertions: {
+    nonNull: ["hk_vle"],
+  },
+}
+
+SELECT DISTINCT
+  TO_HEX(SHA256(CAST(id_site AS STRING))) AS hk_vle,
+  activity_type,
+  CASE
+    WHEN activity_type IN ('forumng', 'glossary') THEN 'communication'
+    WHEN activity_type IN ('oucontent', 'htmlactivity', 'page', 'subpage') THEN 'content'
+    WHEN activity_type IN ('quiz', 'externalquiz', 'questionnaire') THEN 'assessment'
+    WHEN activity_type IN ('resource', 'url', 'folder', 'sharedsubpage') THEN 'reference'
+    WHEN activity_type IN ('homepage', 'dataplus', 'dualpane', 'repeatactivity') THEN 'tool'
+    ELSE 'other'
+  END AS activity_category,
+  week_from,
+  week_to,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM ${ref("bronze_vle")}

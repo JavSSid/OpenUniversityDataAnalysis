@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: "dv",
+  tags: ["dv", "link"],
+  assertions: {
+    uniqueKey: ["hk_student_enrollment"],
+    nonNull: ["hk_student_enrollment", "hk_student", "hk_course_offering"],
+  },
+}
+
+SELECT DISTINCT
+  TO_HEX(SHA256(CONCAT(
+    CAST(id_student AS STRING), '|',
+    code_module, '|',
+    code_presentation
+  ))) AS hk_student_enrollment,
+  TO_HEX(SHA256(CAST(id_student AS STRING))) AS hk_student,
+  TO_HEX(SHA256(CONCAT(code_module, '|', code_presentation))) AS hk_course_offering,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM ${ref("bronze_student_registration")}

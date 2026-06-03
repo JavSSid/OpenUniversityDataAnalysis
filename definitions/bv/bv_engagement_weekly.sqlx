@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  schema: "bv",
+  tags: ["bv"],
+  assertions: {
+    nonNull: ["hk_student", "week_number"],
+  },
+}
+
+SELECT
+  txn.hk_student,
+  txn.hk_course_offering,
+  FLOOR(txn.date / 7) AS week_number,
+  COUNT(DISTINCT txn.date) AS active_days,
+  SUM(txn.sum_click) AS total_clicks,
+  AVG(txn.sum_click) AS avg_daily_clicks,
+  COUNT(DISTINCT txn.hk_vle) AS unique_resources,
+  COUNT(DISTINCT sd.activity_type) AS unique_activity_types,
+  MAX(txn.sum_click) AS max_daily_clicks
+FROM ${ref("txn_student_vle_click")} txn
+LEFT JOIN ${ref("sat_vle_details")} sd
+  ON txn.hk_vle = sd.hk_vle
+GROUP BY 1, 2, 3

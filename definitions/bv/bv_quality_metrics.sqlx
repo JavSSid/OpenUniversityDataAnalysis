@@ -1,14 +1,14 @@
 config {
   type: "incremental",
-  schema: "gold",
-  tags: ["gold", "quality"],
+  schema: "bv",
+  tags: ["bv", "quality"],
   uniqueKey: ["run_date", "table_name", "layer"],
 }
 
 SELECT
   CURRENT_DATE() AS run_date,
-  'studentInfo' AS table_name,
-  'silver' AS layer,
+  'student_enrollment' AS table_name,
+  'dv' AS layer,
   18 AS expectations_evaluated,
   18 AS expectations_passed,
   0 AS expectations_failed,
@@ -17,7 +17,7 @@ SELECT
   0 AS click_anomalies,
   0 AS score_anomalies,
   0 AS temporal_anomalies,
-  (SELECT COUNT(*) FROM ${ref("silver_student_info")}) AS row_count,
+  (SELECT COUNT(*) FROM ${ref("link_student_enrollment")}) AS row_count,
   0 AS pipeline_duration_sec,
   0 AS dbt_tests_passed,
   0 AS dbt_tests_failed

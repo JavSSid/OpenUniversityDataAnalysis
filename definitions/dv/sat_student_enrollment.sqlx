@@ -1,0 +1,32 @@
+config {
+  type: "table",
+  schema: "dv",
+  tags: ["dv", "satellite"],
+  assertions: {
+    nonNull: ["hk_student_enrollment"],
+  },
+}
+
+SELECT DISTINCT
+  TO_HEX(SHA256(CONCAT(
+    CAST(id_student AS STRING), '|',
+    code_module, '|',
+    code_presentation
+  ))) AS hk_student_enrollment,
+  date_registration,
+  NULLIF(date_unregistration, 0) AS date_unregistration,
+  CASE WHEN date_unregistration IS NOT NULL AND date_unregistration <> 0
+       THEN TRUE ELSE FALSE END AS has_unregistered,
+  COALESCE(si.final_result, 'Unknown') AS final_result,
+  CASE
+    WHEN sr.date_registration < 0 THEN 'early'
+    WHEN sr.date_registration = 0 THEN 'on_time'
+    ELSE 'late'
+  END AS registration_timing,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM ${ref("bronze_student_registration")} sr
+LEFT JOIN ${ref("bronze_student_info")} si
+  ON sr.id_student = si.id_student
+  AND sr.code_module = si.code_module
+  AND sr.code_presentation = si.code_presentation

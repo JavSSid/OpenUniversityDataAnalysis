@@ -1,0 +1,39 @@
+config {
+  type: "table",
+  schema: "bv",
+  tags: ["bv"],
+  assertions: {
+    uniqueKey: ["hk_student_enrollment"],
+    nonNull: ["hk_student_enrollment", "id_student"],
+  },
+}
+
+SELECT
+  lse.hk_student_enrollment,
+  lse.hk_student,
+  lse.hk_course_offering,
+  hub_s.id_student,
+  co.code_module,
+  co.code_presentation,
+  sd.gender,
+  sd.age_band,
+  sd.highest_education,
+  sd.disability,
+  sd.region_hashed,
+  sd.imd_band_hashed,
+  sd.studied_credits,
+  sd.num_of_prev_attempts,
+  se.date_registration,
+  se.date_unregistration,
+  se.has_unregistered,
+  se.final_result,
+  se.registration_timing
+FROM ${ref("link_student_enrollment")} lse
+LEFT JOIN ${ref("hub_student")} hub_s
+  ON lse.hk_student = hub_s.hk_student
+LEFT JOIN ${ref("hub_course_offering")} co
+  ON lse.hk_course_offering = co.hk_course_offering
+LEFT JOIN ${ref("sat_student_details")} sd
+  ON lse.hk_student = sd.hk_student
+LEFT JOIN ${ref("sat_student_enrollment")} se
+  ON lse.hk_student_enrollment = se.hk_student_enrollment

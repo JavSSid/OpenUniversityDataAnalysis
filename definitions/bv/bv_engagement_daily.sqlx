@@ -1,0 +1,20 @@
+config {
+  type: "table",
+  schema: "bv",
+  tags: ["bv"],
+  assertions: {
+    nonNull: ["hk_student", "date"],
+  },
+}
+
+SELECT
+  txn.hk_student,
+  txn.hk_course_offering,
+  txn.date,
+  SUM(txn.sum_click) AS total_clicks,
+  COUNT(DISTINCT txn.hk_vle) AS unique_resources,
+  COUNT(DISTINCT sd.activity_type) AS unique_activity_types
+FROM ${ref("txn_student_vle_click")} txn
+LEFT JOIN ${ref("sat_vle_details")} sd
+  ON txn.hk_vle = sd.hk_vle
+GROUP BY 1, 2, 3

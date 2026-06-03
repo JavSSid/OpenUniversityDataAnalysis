@@ -1,0 +1,61 @@
+config {
+  type: "table",
+  schema: "bv",
+  tags: ["bv"],
+  assertions: {
+    nonNull: ["id_student"],
+  },
+}
+
+WITH engagement AS (
+  SELECT
+    hk_student,
+    hk_course_offering,
+    SUM(total_clicks) AS lifetime_clicks,
+    SUM(active_days) AS total_active_days,
+    AVG(avg_daily_clicks) AS avg_daily_clicks,
+    COUNT(DISTINCT week_number) AS active_weeks
+  FROM ${ref("bv_engagement_weekly")}
+  GROUP BY 1, 2
+),
+assessment AS (
+  SELECT
+    hk_student,
+    AVG(score) AS avg_score,
+    COUNT(id_assessment) AS assessments_taken,
+    SUM(CASE WHEN assessment_result = 'passed' THEN 1 ELSE 0 END) AS assessments_passed
+  FROM ${ref("bv_student_assessment")}
+  GROUP BY hk_student
+)
+SELECT
+  se.hk_student_enrollment,
+  se.id_student,
+  se.code_module,
+  se.code_presentation,
+  se.final_result,
+  se.gender,
+  se.age_band,
+  se.disability,
+  se.num_of_prev_attempts,
+  se.registration_timing,
+  se.has_unregistered,
+  COALESCE(e.lifetime_clicks, 0) AS lifetime_clicks,
+  COALESCE(e.total_active_days, 0) AS total_active_days,
+  COALESCE(e.active_weeks, 0) AS active_weeks,
+  COALESCE(a.avg_score, 0) AS avg_score,
+  COALESCE(a.assessments_taken, 0) AS assessments_taken,
+  COALESCE(a.assessments_passed, 0) AS assessments_passed,
+  CASE
+    WHEN COALESCE(a.assessments_taken, 0) = 0 THEN 0
+    ELSE ROUND(CAST(COALESCE(a.assessments_passed, 0) AS FLOAT64) / NULLIF(a.assessments_taken, 0), 2)
+  END AS assessment_completion_rate,
+  CASE
+    WHEN se.final_result = 'Withdrawn' AND COALESCE(e.lifetime_clicks, 0) < 100 THEN TRUE
+    ELSE FALSE
+  END AS early_dropout_flag
+FROM ${ref("bv_student_enrollment")} se
+LEFT JOIN engagement e
+  ON se.hk_student = e.hk_student
+  AND se.hk_course_offering = e.hk_course_offering
+LEFT JOIN assessment a
+  ON se.hk_student = a.hk_student

@@ -1,0 +1,16 @@
+config {
+  type: "table",
+  schema: "dv",
+  tags: ["dv", "hub"],
+  assertions: {
+    uniqueKey: ["hk_vle"],
+    nonNull: ["hk_vle", "id_site"],
+  },
+}
+
+SELECT DISTINCT
+  TO_HEX(SHA256(CAST(id_site AS STRING))) AS hk_vle,
+  id_site,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM ${ref("bronze_vle")}

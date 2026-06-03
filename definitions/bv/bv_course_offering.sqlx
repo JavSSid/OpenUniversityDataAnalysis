@@ -1,0 +1,34 @@
+config {
+  type: "table",
+  schema: "bv",
+  tags: ["bv"],
+  assertions: {
+    uniqueKey: ["hk_course_offering"],
+    nonNull: ["hk_course_offering", "code_module", "code_presentation"],
+  },
+}
+
+SELECT
+  co.hk_course_offering,
+  co.code_module,
+  co.code_presentation,
+  sat.length,
+  sat.presentation_start,
+  a.assessment_types,
+  a.assessment_count,
+  a.total_weight
+FROM ${ref("hub_course_offering")} co
+LEFT JOIN ${ref("sat_course_offering_details")} sat
+  ON co.hk_course_offering = sat.hk_course_offering
+LEFT JOIN (
+  SELECT
+    lcoa.hk_course_offering,
+    STRING_AGG(DISTINCT sad.assessment_type, ', ' ORDER BY sad.assessment_type) AS assessment_types,
+    COUNT(DISTINCT lcoa.hk_assessment) AS assessment_count,
+    SUM(sad.weight) AS total_weight
+  FROM ${ref("link_course_offering_assessment")} lcoa
+  LEFT JOIN ${ref("sat_assessment_details")} sad
+    ON lcoa.hk_assessment = sad.hk_assessment
+  GROUP BY lcoa.hk_course_offering
+) a
+  ON co.hk_course_offering = a.hk_course_offering
