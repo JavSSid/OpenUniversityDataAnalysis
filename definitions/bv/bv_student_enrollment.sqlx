@@ -8,6 +8,14 @@ config {
   },
 }
 
+WITH latest_sd AS (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY hk_student ORDER BY dv_load_date DESC) AS rn
+  FROM ${ref("sat_student_details")}
+),
+latest_se AS (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY hk_student_enrollment ORDER BY dv_load_date DESC) AS rn
+  FROM ${ref("sat_student_enrollment")}
+)
 SELECT
   lse.hk_student_enrollment,
   lse.hk_student,
@@ -33,7 +41,7 @@ LEFT JOIN ${ref("hub_student")} hub_s
   ON lse.hk_student = hub_s.hk_student
 LEFT JOIN ${ref("hub_course_offering")} co
   ON lse.hk_course_offering = co.hk_course_offering
-LEFT JOIN ${ref("sat_student_details")} sd
-  ON lse.hk_student = sd.hk_student
-LEFT JOIN ${ref("sat_student_enrollment")} se
-  ON lse.hk_student_enrollment = se.hk_student_enrollment
+LEFT JOIN latest_sd sd
+  ON lse.hk_student = sd.hk_student AND sd.rn = 1
+LEFT JOIN latest_se se
+  ON lse.hk_student_enrollment = se.hk_student_enrollment AND se.rn = 1
