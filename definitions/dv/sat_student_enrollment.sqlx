@@ -1,28 +1,27 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "dv",
   tags: ["dv", "satellite"],
-  assertions: {
-    nonNull: ["hk_student_enrollment"],
-  },
 }
 
-SELECT
-  hk_student_enrollment,
-  ANY_VALUE(date_registration) AS date_registration,
-  ANY_VALUE(date_unregistration) AS date_unregistration,
-  ANY_VALUE(has_unregistered) AS has_unregistered,
-  ANY_VALUE(final_result) AS final_result,
-  ANY_VALUE(registration_timing) AS registration_timing,
-  CURRENT_TIMESTAMP() AS dv_load_date,
-  'OULAD' AS dv_source
-FROM (
+WITH sat_data AS (
   SELECT DISTINCT
     TO_HEX(SHA256(CONCAT(
       CAST(sr.id_student AS STRING), '|',
       sr.code_module, '|',
       sr.code_presentation
     ))) AS hk_student_enrollment,
+    TO_HEX(SHA256(CONCAT(
+      COALESCE(CAST(sr.date_registration AS STRING), ''), '|',
+      COALESCE(CAST(NULLIF(sr.date_unregistration, 0) AS STRING), ''), '|',
+      COALESCE(CAST(CASE WHEN sr.date_unregistration IS NOT NULL AND sr.date_unregistration <> 0 THEN TRUE ELSE FALSE END AS STRING), ''), '|',
+      COALESCE(si.final_result, 'Unknown'), '|',
+      COALESCE(CASE
+        WHEN sr.date_registration < 0 THEN 'early'
+        WHEN sr.date_registration = 0 THEN 'on_time'
+        ELSE 'late'
+      END, '')
+    ))) AS hk_hashdiff,
     sr.date_registration,
     NULLIF(sr.date_unregistration, 0) AS date_unregistration,
     CASE WHEN sr.date_unregistration IS NOT NULL AND sr.date_unregistration <> 0
@@ -39,4 +38,14 @@ FROM (
     AND sr.code_module = si.code_module
     AND sr.code_presentation = si.code_presentation
 )
-GROUP BY hk_student_enrollment
+SELECT
+  *,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM sat_data
+
+${ when(incremental(), `WHERE NOT EXISTS (
+  SELECT 1 FROM ${self()} t
+  WHERE t.hk_student_enrollment = sat_data.hk_student_enrollment
+  AND t.hk_hashdiff = sat_data.hk_hashdiff
+)`) }

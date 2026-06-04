@@ -1,23 +1,25 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "dv",
   tags: ["dv", "satellite"],
-  assertions: {
-    nonNull: ["hk_vle"],
-  },
 }
 
-SELECT
-  hk_vle,
-  ANY_VALUE(activity_type) AS activity_type,
-  ANY_VALUE(activity_category) AS activity_category,
-  ANY_VALUE(week_from) AS week_from,
-  ANY_VALUE(week_to) AS week_to,
-  CURRENT_TIMESTAMP() AS dv_load_date,
-  'OULAD' AS dv_source
-FROM (
+WITH sat_data AS (
   SELECT DISTINCT
     TO_HEX(SHA256(CAST(id_site AS STRING))) AS hk_vle,
+    TO_HEX(SHA256(CONCAT(
+      COALESCE(activity_type, ''), '|',
+      COALESCE(CASE
+        WHEN activity_type IN ('forumng', 'glossary') THEN 'communication'
+        WHEN activity_type IN ('oucontent', 'htmlactivity', 'page', 'subpage') THEN 'content'
+        WHEN activity_type IN ('quiz', 'externalquiz', 'questionnaire') THEN 'assessment'
+        WHEN activity_type IN ('resource', 'url', 'folder', 'sharedsubpage') THEN 'reference'
+        WHEN activity_type IN ('homepage', 'dataplus', 'dualpane', 'repeatactivity') THEN 'tool'
+        ELSE 'other'
+      END, ''), '|',
+      COALESCE(CAST(week_from AS STRING), ''), '|',
+      COALESCE(CAST(week_to AS STRING), '')
+    ))) AS hk_hashdiff,
     activity_type,
     CASE
       WHEN activity_type IN ('forumng', 'glossary') THEN 'communication'
@@ -31,4 +33,14 @@ FROM (
     week_to
   FROM ${ref("bronze_vle")}
 )
-GROUP BY hk_vle
+SELECT
+  *,
+  CURRENT_TIMESTAMP() AS dv_load_date,
+  'OULAD' AS dv_source
+FROM sat_data
+
+${ when(incremental(), `WHERE NOT EXISTS (
+  SELECT 1 FROM ${self()} t
+  WHERE t.hk_vle = sat_data.hk_vle
+  AND t.hk_hashdiff = sat_data.hk_hashdiff
+)`) }

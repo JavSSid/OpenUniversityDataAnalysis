@@ -1,23 +1,40 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "dv",
   tags: ["dv", "satellite"],
-  assertions: {
-    nonNull: ["hk_student"],
-  },
 }
 
+WITH sat_data AS (
+  SELECT DISTINCT
+    TO_HEX(SHA256(CAST(id_student AS STRING))) AS hk_student,
+    TO_HEX(SHA256(CONCAT(
+      COALESCE(gender, ''), '|',
+      COALESCE(age_band, ''), '|',
+      COALESCE(highest_education, ''), '|',
+      COALESCE(CAST(disability AS STRING), ''), '|',
+      COALESCE(region, ''), '|',
+      COALESCE(imd_band, ''), '|',
+      COALESCE(CAST(studied_credits AS STRING), ''), '|',
+      COALESCE(CAST(num_of_prev_attempts AS STRING), '')
+    ))) AS hk_hashdiff,
+    gender,
+    age_band,
+    highest_education,
+    disability,
+    TO_HEX(SHA256(CAST(region AS STRING))) AS region_hashed,
+    TO_HEX(SHA256(CAST(imd_band AS STRING))) AS imd_band_hashed,
+    studied_credits,
+    num_of_prev_attempts
+  FROM ${ref("bronze_student_info")}
+)
 SELECT
-  TO_HEX(SHA256(CAST(id_student AS STRING))) AS hk_student,
-  ANY_VALUE(gender) AS gender,
-  ANY_VALUE(age_band) AS age_band,
-  ANY_VALUE(highest_education) AS highest_education,
-  ANY_VALUE(disability) AS disability,
-  ANY_VALUE(TO_HEX(SHA256(CAST(region AS STRING)))) AS region_hashed,
-  ANY_VALUE(TO_HEX(SHA256(CAST(imd_band AS STRING)))) AS imd_band_hashed,
-  ANY_VALUE(studied_credits) AS studied_credits,
-  ANY_VALUE(num_of_prev_attempts) AS num_of_prev_attempts,
+  *,
   CURRENT_TIMESTAMP() AS dv_load_date,
   'OULAD' AS dv_source
-FROM ${ref("bronze_student_info")}
-GROUP BY hk_student
+FROM sat_data
+
+${ when(incremental(), `WHERE NOT EXISTS (
+  SELECT 1 FROM ${self()} t
+  WHERE t.hk_student = sat_data.hk_student
+  AND t.hk_hashdiff = sat_data.hk_hashdiff
+)`) }

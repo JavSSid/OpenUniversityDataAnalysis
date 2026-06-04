@@ -1,9 +1,9 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "dv",
   tags: ["dv", "hub"],
+  uniqueKey: ["hk_course_offering"],
   assertions: {
-    uniqueKey: ["hk_course_offering"],
     nonNull: ["hk_course_offering", "code_module", "code_presentation"],
   },
 }

@@ -1,9 +1,9 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "dv",
   tags: ["dv", "hub"],
+  uniqueKey: ["hk_assessment"],
   assertions: {
-    uniqueKey: ["hk_assessment"],
     nonNull: ["hk_assessment", "id_assessment"],
   },
 }
